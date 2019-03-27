@@ -6,7 +6,10 @@ A easy-use tool to connect to a remote server. This tool is developed on `parami
 One can find the instruction by run command `easycon` in terminal directly.  
 (For windows users, one can try `easycon` or `easycon.bat`)
 
-### Update 2019.03.26
+
+
+
+### Update 2019.03.27
 add --loginw
 
 ### Update 2019.03.16

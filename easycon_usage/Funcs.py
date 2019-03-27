@@ -41,7 +41,6 @@ class Funcs():
     def mkConfig(path):
         S = """[Server configuration]
 # If password is empty, this must be specified.
-
 hostname = 1.1.1.1   
 username = root      
 #port =  22         
@@ -49,8 +48,3 @@ username = root
 #key_filename = local/path/to/key.pem 
         """
         open(path,'w').write(S)
-        
-        
-        
-         
-        
