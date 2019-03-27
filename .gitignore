@@ -1,0 +1,6 @@
+
+easycon_usage/\.DS_Store
+
+easycon_usage/__pycache__/
+
+easycon_usage/SSH_Operation/__pycache__/
