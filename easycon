@@ -41,11 +41,21 @@ FullDescription = '''
        Example:  
                  easycon --config <path> --login 
                  
+    --jump
+      Through a basion machine to reach the remote server.  
+      .Local.  -->  .jump.  -->  .target.
+      The input config file has the same fomat as the `--config` input. 
+      Example:
+                 easycon --config <path> --jump <path>  [options]  
+                 
+                  
+
     --loginw {LINUX} {UNSECURE} 
       Offer a better interactive connection.  
       Similar to '--login', however, this would send command string into terminal.
       This may leave a record cotains the credential to the OS.  
       Only use this option on your own PC.  
+      (do not support '--basion'.)
       
                  
      --dirpath 
@@ -110,6 +120,9 @@ parser.add_argument('--config', help='Login information of remote server')
 help = '''Make a template of configurate.
 Example: easycon --mkconfig <file-path> '''
 parser.add_argument('--mkconfig', help=help)
+
+# use a basion machine 
+parser.add_argument('--jump',required=False, help='The jumping configration')
 #----------------------------------------------------------------------------
 # describe remote server   
 parser.add_argument('--describe',required=False,action="store_true", help='Describe server info')
@@ -131,6 +144,13 @@ parser.add_argument('--downloadfile',required=False, help='download single file'
 # download dir 
 parser.add_argument('--get',required=False, help='download a directory or file.') 
 
+
+
+#-------------
+# Script global variables:
+G_jumpConfig = None 
+G_SSHclient  = None
+G_CONFIG     = None 
 
 
 
@@ -191,14 +211,39 @@ if 'mkconfig' in Eargs:
     exit()
 
 
+
+# jump  
+# https://stackoverflow.com/questions/18968069/paramiko-port-forwarding-around-a-nat-router/19039769#19039769
+# https://gist.github.com/tintoy/443c42ea3865680cd624039c4bb46219
+if args['jump'] is not None:
+    if G_CONFIG is None:  G_CONFIG = Funcs.readConfig(args['config'])
+    G_jumpConfig = Funcs.readConfig(args['jump']) 
+    jumpSSH = SSH_Operation( G_jumpConfig )
+    jumpSSH.connect() 
+    # print(basionConn.ssh);exit()
+    transport = jumpSSH.ssh.get_transport() 
+    des = (  G_CONFIG['hostname']  , int( G_CONFIG    .get('port',22) )  )
+    src = (  '127.0.0.0'           , int( G_jumpConfig.get('port',22) )  ) 
+    jumpchannel = transport.open_channel("direct-tcpip", des, src  ) 
+    G_CONFIG['sock'] = jumpchannel
+    
+    
+    
+    
+
+
+
+
+
+# config 
 # none-input config file error   
 if args['config'] is None:
     print("ERROR: you must specify --config. If you do not have one, use --mkconfig")
     exit()
 else:
     # connect to server   
-    CONFIG = Funcs.readConfig(args['config']) 
-    SSH = SSH_Operation(CONFIG)  
+    if G_CONFIG is None:  G_CONFIG = Funcs.readConfig(args['config']) 
+    G_SSHclient = SSH_Operation( G_CONFIG )  
     # SSH.connect() 
     
     
@@ -220,41 +265,41 @@ if 'describe' in Eargs:
     
 # login  
 if 'login' in Eargs:
-    SSH = SSH_Operation(CONFIG)
-    SSH .CreateInteractiveConnectionSSH()
+    # SSH = SSH_Operation(CONFIG)
+    G_SSHclient .CreateInteractiveConnectionSSH()
     exit()   
     
 
 # login  
 if 'loginw' in Eargs:
-    SSH = SSH_Operation(CONFIG)
-    SSH .CreateInteractiveConnectionSSH_linuxString()
+    # SSH = SSH_Operation(CONFIG)
+    G_SSHclient .CreateInteractiveConnectionSSH_linuxString()
     exit()  
 
     
 # uploadfile      
 if 'uploadfile' in Eargs:
     # SSH = SSH_Operation(CONFIG)
-    SSH.connectIfNotConnected()
-    remoteHomeFunc = SSH.GetHomePath
+    G_SSHclient.connectIfNotConnected()
+    remoteHomeFunc = G_SSHclient.GetHomePath
     src = args['uploadfile'] 
     filename = ntpath.basename(src)  
     des =  GetDirPathOrHomePath(remoteHomeFunc)+ filename
-    SSH.upload_file(localfile=src,remotedestination=des)
+    G_SSHclient.upload_file(localfile=src,remotedestination=des)
     exit() 
     
 # uploaddir      
 if 'put' in Eargs:
     # SSH = SSH_Operation(CONFIG)
-    SSH.connectIfNotConnected()
-    remoteHomeFunc = SSH.GetHomePath      
+    G_SSHclient.connectIfNotConnected()
+    remoteHomeFunc = G_SSHclient.GetHomePath      
     src = os.path.abspath(args['put'])  
     filename = ntpath.basename(src)  
     RemoteDir = GetDirPathOrHomePath(remoteHomeFunc)[:-1] 
     if os.path.isdir(src):
-        upload = SSH.CompressUploadDir(localdirectoy=src,remotedestination=RemoteDir)
+        upload = G_SSHclient.CompressUploadDir(localdirectoy=src,remotedestination=RemoteDir)
     elif os.path.isfile(src):
-        upload = SSH.upload_file(localfile = src,remotedestination = RemoteDir+"/"+filename)
+        upload = G_SSHclient.upload_file(localfile = src,remotedestination = RemoteDir+"/"+filename)
     else:
         print('{} is not found'.format(src))
         exit()
@@ -266,16 +311,16 @@ if 'put' in Eargs:
 # downloadfile      
 if 'downloadfile' in Eargs:
     # SSH = SSH_Operation(CONFIG)
-    SSH.connectIfNotConnected()
+    G_SSHclient.connectIfNotConnected()
     src = args['downloadfile'] 
     des = os.path.join( os.getcwd() , ntpath.basename(src) )
-    SSH.download_file(remotefile=src,localdestination=des)
+    G_SSHclient.download_file(remotefile=src,localdestination=des)
     exit() 
     
         
 # download dir    
 if 'get' in Eargs:
-    SSH.connectIfNotConnected()
+    G_SSHclient.connectIfNotConnected()
     src = args['get'] 
-    SSH.CompressDownloadDir(Remotedirectoy=src,localdestination=os.getcwd() )
+    G_SSHclient.CompressDownloadDir(Remotedirectoy=src,localdestination=os.getcwd() )
     exit()     

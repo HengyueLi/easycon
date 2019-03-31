@@ -1,18 +1,40 @@
 # easycon  
-A easy-use tool to connect to a remote server. This tool is developed on `paramiko`. 
+A easy-use tool to connect to a remote server, by which one can easily login, upload and download files to and from a remote server. One can also connect to a server behind a NAT. This tool is developed on `paramiko`. 
 ## Install  
 `pip install easycon` 
 ## Usage 
 One can find the instruction by run command `easycon` in terminal directly.  
 (For windows users, one can try `easycon` or `easycon.bat`)
 
+In the following, some of the examples are given:
+
+* login remote server:  
+`easycon --config <configfile> --login`  
+(One can obtain a `<configfile>` template by `--mkconfig` )  
+* upload file(dir) into remote server:  
+`easycon --config <configfile> --put <example.txt>`  
+* download file(dir) from server:  
+`easycon --config <configfile> --get <example.txt>`  
+* jump over NAT:  
+scenery: One need to login a server that is in a private subnet (behind a NAT) shown as following:  
+`local host` --> `jumpbox` --> `target` 
+One can get two configurate file `<jump.txt>` and `<target.txt>` and execute:  
+`easycon --config <target.txt> --jump <jump.txt>`  
+
+One can find more in instruction.
 
 
+ 
 
-### Update 2019.03.27
+## Update 
+
+### 2019.03.31
+add --jump
+
+### 2019.03.27
 add --loginw
 
-### Update 2019.03.16
+### 2019.03.16
 Update sshapi.  
 
 ### Update 2019.03.10 
