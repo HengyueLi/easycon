@@ -28,6 +28,9 @@ One can find more in instruction.
 
 ## Update 
 
+### 2019.04.02 
+add --dynamic   (ssh -D)
+
 ### 2019.03.31
 add --jump
 

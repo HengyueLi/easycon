@@ -1,9 +1,9 @@
-#!/usr/bin/env python3 
+#!/usr/bin/env python3
 
 
 
 import argparse,ntpath,os
-from easycon_usage.Funcs import Funcs 
+from easycon_usage.Funcs import Funcs
 # from easycon_usage.SSH_Operation.SSH_Operation import SSH_Operation
 from SSH_Operation.SSH_Operation import SSH_Operation
 from termcolor import colored as ctxt
@@ -17,83 +17,99 @@ FullDescription = '''
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {COMMAND}:
-    easycon [options] 
-{DESCRIPTION}: 
+    easycon [options]
+{DESCRIPTION}:
     An easy tool to control remote (linux-like) server. One must input a <CONFIG>
- file. The <CONFIG> contains all the information, such as IP, port, of the remote  
- server. One can use --mkconfig to create a template.  
-{OPTIONS}: 
-     --config 
+ file. The <CONFIG> contains all the information, such as IP, port, of the remote
+ server. One can use --mkconfig to create a template.
+{OPTIONS}:
+     -c, --config
         A file contains login info. If you do not have one, consider  '--mkconfig'
-        Example: 
-                 easycon --config <path> [options]  
-        
-     --mkconfig
-       Create a template login file.  
-       Example: 
-                 easycon --mkconfig <path> 
-        
-     --describe 
-        Show information of remote server. This can be a test of connection.   
-        
-     --login  
-       Use SSH to connect to the remote server. This makes an interavtive window. 
-       Example:  
-                 easycon --config <path> --login 
-                 
-    --jump
-      Through a basion machine to reach the remote server.  
-      .Local.  -->  .jump.  -->  .target.
-      The input config file has the same fomat as the `--config` input. 
-      Example:
-                 easycon --config <path> --jump <path>  [options]  
-                 
-                  
+        Example:
+                 easycon --config <path> [options]
 
-    --loginw {LINUX} {UNSECURE} 
-      Offer a better interactive connection.  
-      Similar to '--login', however, this would send command string into terminal.
-      This may leave a record cotains the credential to the OS.  
-      Only use this option on your own PC.  
-      (do not support '--basion'.)
-      
+     --mkconfig
+       Create a template login file.
+       Example:
+                 easycon --mkconfig <path>
+
+     --describe
+        Show information of remote server. This can be a test of connection.
+
+     --login  {LIMITED}
+       Use SSH to connect to the remote server. This makes an interavtive window.
+       Example:
+                 easycon --config <path> --login
+
+    --dynamic  {LIMITED}
+      bind a local port to create a socket proxy
+      Example:
+                 easycon --config --dynamic 12345
                  
-     --dirpath 
-       A absolute path of directly (linux form) may be used for many cases. 
-        
-     --uploadfile 
-       upload a file into the remote.  
-       Example:  
+    -F, --forward
+     port forward  
+     Example:
+                 easycon --config --forward <localPort>:<targetHost>:<targetPort>
+     forward ( 127.0.0.1:<localPort> )  -(ssh)-> (<targetHost>:<targetPort>)
+
+
+    --jump
+      Through a basion machine to reach the remote server.
+      .Local.  -->  .jump.  -->  .target.
+      The input config file has the same fomat as the `--config` input.
+      Example:
+                 easycon --config <path> --jump <path>  [options]
+
+
+
+    --loginw  {UNSECURE}
+      Offer a better interactive connection.
+      Similar to '--login', however, this would send command string into terminal.
+      This may leave a record cotains the credential to the OS.
+      Only use this option on your own PC.
+      (do not support '--basion'.)
+
+
+     --dirpath
+       A absolute path of directly (linux form) may be used for many cases.
+
+     --uploadfile
+       upload a file into the remote.
+       Example:
                  easycon --config <path> --uploadfile <filepath>   [ --dirpath <path> ]
        if a <path> is specified, file will be upload to "<path>/<filename>"
-       if not, file will be put at "/home/<filename>"     
-       
-     --put 
-       Similar to --uploadfile. But the uploaded object can be directory too.  
-       For directory case, tar is used temporarily to increase speed. 
-       
-       
-     --downloadfile 
-       downloadfile a file from the remote.  
-       Example:  
-                 easycon --config <path> --downloadfile <filepath>  
+       if not, file will be put at "/home/<filename>"
+
+     --put
+       Similar to --uploadfile. But the uploaded object can be directory too.
+       For directory case, tar is used temporarily to increase speed.
+
+    --putdir
+       upload directory without compression     
+
+
+     --downloadfile
+       downloadfile a file from the remote.
+       Example:
+                 easycon --config <path> --downloadfile <filepath>
        <filepath> must be a absolute path such as "/home/ec2-user/file.txt"
-       The file will be download the current working directory (CWD)   
-       
+       The file will be download the current working directory (CWD)
+
      --get
-       Similar to --downloadfile. But the downloaded object can be directory too.                         
-        
-       
+       Similar to --downloadfile. But the downloaded object can be directory too.
+
+
 
 '''.format(
- COMMAND     = ctxt('COMMAND'      , 'blue'),
- DESCRIPTION = ctxt('DESCRIPTION'  , 'blue'),
- OPTIONS     = ctxt('OPTIONS'      , 'blue'),
- LINUX       = ctxt('LINUX ONLY!'  , 'red') ,
- UNSECURE    = ctxt('UNSECURE!'    , 'red')
+ COMMAND     = ctxt('COMMAND'      , 'blue'  ),
+ DESCRIPTION = ctxt('DESCRIPTION'  , 'blue'  ),
+ OPTIONS     = ctxt('OPTIONS'      , 'blue'  ),
+ LINUX       = ctxt('LINUX ONLY!'  , 'red'   ),
+ UNSECURE    = ctxt('UNSECURE!'    , 'red'   ),
+ LIMITED     = ctxt('LIMITED!'     , 'yellow'),
   )
-  
-  
+
+
 
 
 
@@ -114,43 +130,51 @@ parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,d
 # parser.add_argument('--help','-h', help='hh')
 #----------------------------------------------------------------------------
 # input configurate file
-parser.add_argument('--config', help='Login information of remote server')
+parser.add_argument('-c','--config', help='Login information of remote server')
 #----------------------------------------------------------------------------
 # make config file --------
 help = '''Make a template of configurate.
 Example: easycon --mkconfig <file-path> '''
 parser.add_argument('--mkconfig', help=help)
 
-# use a basion machine 
+# use a basion machine
 parser.add_argument('--jump',required=False, help='The jumping configration')
 #----------------------------------------------------------------------------
-# describe remote server   
+# describe remote server
 parser.add_argument('--describe',required=False,action="store_true", help='Describe server info')
 #----------------------------------------------------------------------------
-# login   
+# login
 parser.add_argument('--login',required=False,action="store_true", help='SSH login server')
-# loginw   
+# loginw
 parser.add_argument('--loginw',required=False,action="store_true", help='SSH login server,better connection,less secure')
 #----------------------------------------------------------------------------
-# dirpath   
+# dynamic ssh -D
+parser.add_argument('--dynamic',required=False, help='dynamic port forwarding')
+#----------------------------------------------------------------------------
+# ssh -L
+parser.add_argument('-F','--forward',required=False, help='Port forwarding')
+#----------------------------------------------------------------------------
+# dirpath
 parser.add_argument('--dirpath',required=False, help='Must be a absolute path of a directory')
 #----------------------------------------------------------------------------
-# upload single file     
+# upload single file
 parser.add_argument('--uploadfile',required=False, help='upload single file')
-# upload dir 
-parser.add_argument('--put',required=False, help='upload a directory or file.')  
-# download single file     
+# upload dir
+parser.add_argument('--put',required=False, help='upload a directory or file.')
+# upload dir without compression
+parser.add_argument('--putdir',required=False, help='upload a directory without compression')
+# download single file
 parser.add_argument('--downloadfile',required=False, help='download single file')
-# download dir 
-parser.add_argument('--get',required=False, help='download a directory or file.') 
+# download dir
+parser.add_argument('--get',required=False, help='download a directory or file.')
 
 
 
 #-------------
 # Script global variables:
-G_jumpConfig = None 
+G_jumpConfig = None
 G_SSHclient  = None
-G_CONFIG     = None 
+G_CONFIG     = None
 
 
 
@@ -161,33 +185,33 @@ G_CONFIG     = None
 
 
 #------------------------------------------------------------------------------
-# process variables 
+# process variables
 args  = vars(parser.parse_args())
-Eargs = {}   
+Eargs = {}
 for i in args:
     if args[i] not in [None,False]:
         Eargs[i] = args[i]
-        
+
 
 
 
 #-----
-# general function 
+# general function
 #
-def GetDirPathOrHomePath(GetHomePathFunc): 
+def GetDirPathOrHomePath(GetHomePathFunc):
     # GetHomePathFunc is a function to obtain homePath = "/home"
     # return "/absPath/" or '/home/'
     if 'dirpath' in Eargs:
-        path = Eargs['dirpath']  
-        if path[0]  != '/': path  = '/' + path  
-        if path[-1] != '/': path += '/' 
+        path = Eargs['dirpath']
+        if path[0]  != '/': path  = '/' + path
+        if path[-1] != '/': path += '/'
     else:
-        home = GetHomePathFunc()  
-        path = home + '/'  
+        home = GetHomePathFunc()
+        path = home + '/'
     return path
-    
-        
-         
+
+
+
 
 
 
@@ -197,105 +221,122 @@ def GetDirPathOrHomePath(GetHomePathFunc):
 
 
 #-----------------
-#  if no input, show help 
-if len(Eargs) == 0 : 
-    print( FullDescription ) 
+#  if no input, show help
+if len(Eargs) == 0 :
+    print( FullDescription )
     exit()
-    
 
 
 
-# mkconfig 
+
+# mkconfig
 if 'mkconfig' in Eargs:
     Funcs.mkConfig(Eargs['mkconfig'])
     exit()
 
 
 
-# jump  
+# jump
 # https://stackoverflow.com/questions/18968069/paramiko-port-forwarding-around-a-nat-router/19039769#19039769
 # https://gist.github.com/tintoy/443c42ea3865680cd624039c4bb46219
 if args['jump'] is not None:
     if G_CONFIG is None:  G_CONFIG = Funcs.readConfig(args['config'])
-    G_jumpConfig = Funcs.readConfig(args['jump']) 
+    G_jumpConfig = Funcs.readConfig(args['jump'])
     jumpSSH = SSH_Operation( G_jumpConfig )
-    jumpSSH.connect() 
+    jumpSSH.connect()
     # print(basionConn.ssh);exit()
-    transport = jumpSSH.ssh.get_transport() 
+    transport = jumpSSH.ssh.get_transport()
     des = (  G_CONFIG['hostname']  , int( G_CONFIG    .get('port',22) )  )
-    src = (  '127.0.0.0'           , int( G_jumpConfig.get('port',22) )  ) 
-    jumpchannel = transport.open_channel("direct-tcpip", des, src  ) 
+    src = (  '127.0.0.0'           , int( G_jumpConfig.get('port',22) )  )
+    jumpchannel = transport.open_channel("direct-tcpip", des, src  )
     G_CONFIG['sock'] = jumpchannel
-    
-    
-    
-    
 
 
 
 
 
-# config 
-# none-input config file error   
+
+
+
+
+# config
+# none-input config file error
 if args['config'] is None:
     print("ERROR: you must specify --config. If you do not have one, use --mkconfig")
     exit()
 else:
-    # connect to server   
-    if G_CONFIG is None:  G_CONFIG = Funcs.readConfig(args['config']) 
-    G_SSHclient = SSH_Operation( G_CONFIG )  
-    # SSH.connect() 
-    
-    
-    
+    # connect to server
+    if G_CONFIG is None:  G_CONFIG = Funcs.readConfig(args['config'])
+    G_SSHclient = SSH_Operation( G_CONFIG )
+    # SSH.connect()
 
-# describe   
+
+
+
+# describe
 if 'describe' in Eargs:
     print('Info')
     exit()
 
-    
-    
-    
-    
-    
-    
-    
 
-    
-# login  
+
+
+
+
+
+
+
+
+# login
 if 'login' in Eargs:
     # SSH = SSH_Operation(CONFIG)
     G_SSHclient .CreateInteractiveConnectionSSH()
-    exit()   
-    
+    exit()
 
-# login  
+
+# login
 if 'loginw' in Eargs:
     # SSH = SSH_Operation(CONFIG)
     G_SSHclient .CreateInteractiveConnectionSSH_linuxString()
-    exit()  
+    exit()
 
-    
-# uploadfile      
+
+# dynamic   ssh -D
+if 'dynamic' in Eargs:
+    G_SSHclient.DynamicSocket(args['dynamic'] )
+    exit()
+
+
+# ssh -L 
+if 'forward' in Eargs:
+    argList = args['forward'].split(':')
+    G_SSHclient.PortForward(*argList)
+    exit()
+
+
+
+
+
+
+# uploadfile
 if 'uploadfile' in Eargs:
     # SSH = SSH_Operation(CONFIG)
     G_SSHclient.connectIfNotConnected()
     remoteHomeFunc = G_SSHclient.GetHomePath
-    src = args['uploadfile'] 
-    filename = ntpath.basename(src)  
+    src = args['uploadfile']
+    filename = ntpath.basename(src)
     des =  GetDirPathOrHomePath(remoteHomeFunc)+ filename
     G_SSHclient.upload_file(localfile=src,remotedestination=des)
-    exit() 
-    
-# uploaddir      
+    exit()
+
+# uploaddir
 if 'put' in Eargs:
     # SSH = SSH_Operation(CONFIG)
     G_SSHclient.connectIfNotConnected()
-    remoteHomeFunc = G_SSHclient.GetHomePath      
-    src = os.path.abspath(args['put'])  
-    filename = ntpath.basename(src)  
-    RemoteDir = GetDirPathOrHomePath(remoteHomeFunc)[:-1] 
+    remoteHomeFunc = G_SSHclient.GetHomePath
+    src = os.path.abspath(args['put'])
+    filename = ntpath.basename(src)
+    RemoteDir = GetDirPathOrHomePath(remoteHomeFunc)[:-1]
     if os.path.isdir(src):
         upload = G_SSHclient.CompressUploadDir(localdirectoy=src,remotedestination=RemoteDir)
     elif os.path.isfile(src):
@@ -303,24 +344,43 @@ if 'put' in Eargs:
     else:
         print('{} is not found'.format(src))
         exit()
-    exit() 
+    exit()
     
+# uploaddir without compression
+if 'putdir' in Eargs:
+    # SSH = SSH_Operation(CONFIG)
+    G_SSHclient.connectIfNotConnected()
+    remoteHomeFunc = G_SSHclient.GetHomePath
+    src = os.path.abspath(args['putdir'])
+    filename = ntpath.basename(src)
+    RemoteDir = GetDirPathOrHomePath(remoteHomeFunc)[:-1]
+    upload = G_SSHclient.upload_dir(localdirectoy=src,remotedestination=RemoteDir)
+    # if os.path.isdir(src):
+    #     upload = G_SSHclient.CompressUploadDir(localdirectoy=src,remotedestination=RemoteDir)
+    # elif os.path.isfile(src):
+    #     upload = G_SSHclient.upload_file(localfile = src,remotedestination = RemoteDir+"/"+filename)
+    # else:
+    #     print('{} is not found'.format(src))
+    #     exit()
+    exit()    
     
-    
- 
-# downloadfile      
+
+
+
+
+# downloadfile
 if 'downloadfile' in Eargs:
     # SSH = SSH_Operation(CONFIG)
     G_SSHclient.connectIfNotConnected()
-    src = args['downloadfile'] 
+    src = args['downloadfile']
     des = os.path.join( os.getcwd() , ntpath.basename(src) )
     G_SSHclient.download_file(remotefile=src,localdestination=des)
-    exit() 
-    
-        
-# download dir    
+    exit()
+
+
+# download dir
 if 'get' in Eargs:
     G_SSHclient.connectIfNotConnected()
-    src = args['get'] 
+    src = args['get']
     G_SSHclient.CompressDownloadDir(Remotedirectoy=src,localdestination=os.getcwd() )
-    exit()     
+    exit()
