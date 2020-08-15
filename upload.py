@@ -3,8 +3,8 @@ import sys,os,datetime
 
 
 #--------------
-name    = 'easycon' 
-scripts = ['easycon','easycon.cmd']  
+name    = 'easycon'
+scripts = ['easycon','easycon.cmd','easycon-cli','easycon-cli.cmd']
 #--------------
 
 
@@ -14,9 +14,9 @@ python   = sys.executable
 filepath = os.path.realpath(__file__)
 projpath = os.path.dirname(filepath)
 dist = os.path.join(projpath,'dist')
-passDir = os.path.join(os.environ['HOME'],'Dropbox/AutoPassword')
+passDir = os.path.join(os.environ['DROPBOX_HOME'],'AutoPassword')
 sys.path.insert(0, passDir)
-import password as pw 
+import password as pw
 
 
 
@@ -40,8 +40,8 @@ setuptools.setup(
     url = "https://github.com/HengyueLi/easycon",
 )
 '''.format(name    = name ,
-           scripts = str(scripts), 
-           version = datetime.datetime.now().strftime("%Y.%m.%d.%H%M") , 
+           scripts = str(scripts),
+           version = datetime.datetime.now().strftime("%Y.%m.%d.%H%M") ,
            install_requires = [ i for i in open('requirements.txt').read().split('\n') if len(i)>1  ] )
 
 
@@ -54,7 +54,7 @@ with open('setup.py','w') as f:
     f.write(setupcontext)
 os.system('{} setup.py sdist'.format(python))
 #---------------------------------------
-# upload with username&password 
+# upload with username&password
 command = "twine upload dist/* -u {username} -p {password}".format(
                 username = pw.GetAutoPasswd('pip','username').get(),
                 password = pw.GetAutoPasswd('pip','password').get() )

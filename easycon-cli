@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+
+from prompt_toolkit import prompt
+from prompt_toolkit.completion import WordCompleter
+import sys,os
+
+
+
+options = WordCompleter([
+                        '--config',
+                        '--mkconfig',
+                        '--describe',
+                        '--login',
+                        '--loginw',
+                        '--dynamic',
+                        '--forward',
+                        '--jump',
+                        '--dirpath',
+                        '--uploadfile',
+                        '--put',
+                        '--putdir',
+                        '--downloadfile',
+                        '--get',
+                        '--quit'
+                        ])
+
+#     get interpreter
+python = sys.executable
+
+while True:
+    cmd = prompt('>:', completer=options)
+    if '--quit' in cmd:
+        exit()
+    else:
+        os.system("{}".format(cmd))
