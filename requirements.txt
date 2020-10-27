@@ -2,7 +2,7 @@ asn1crypto==0.24.0
 bcrypt==3.1.6
 cffi==1.12.2
 colorama==0.4.1
-cryptography==2.4.2
+cryptography==3.2
 HY-sshapi==2019.4.11.2029
 idna==2.7
 paramiko==2.4.2
