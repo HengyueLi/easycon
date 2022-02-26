@@ -41,13 +41,13 @@ FullDescription = '''
        Example:
                  easycon --config <path> --login
 
-    --dynamic  {LIMITED}
+    --dynamic   
       bind a local port to create a socket proxy
       Example:
                  easycon --config --dynamic 12345
-                 
+
     -F, --forward
-     port forward  
+     port forward
      Example:
                  easycon --config --forward <localPort>:<targetHost>:<targetPort>
      forward ( 127.0.0.1:<localPort> )  -(ssh)-> (<targetHost>:<targetPort>)
@@ -85,7 +85,7 @@ FullDescription = '''
        For directory case, tar is used temporarily to increase speed.
 
     --putdir
-       upload directory without compression     
+       upload directory without compression
 
 
      --downloadfile
@@ -307,7 +307,7 @@ if 'dynamic' in Eargs:
     exit()
 
 
-# ssh -L 
+# ssh -L
 if 'forward' in Eargs:
     argList = args['forward'].split(':')
     G_SSHclient.PortForward(*argList)
@@ -345,7 +345,7 @@ if 'put' in Eargs:
         print('{} is not found'.format(src))
         exit()
     exit()
-    
+
 # uploaddir without compression
 if 'putdir' in Eargs:
     # SSH = SSH_Operation(CONFIG)
@@ -362,8 +362,8 @@ if 'putdir' in Eargs:
     # else:
     #     print('{} is not found'.format(src))
     #     exit()
-    exit()    
-    
+    exit()
+
 
 
 
