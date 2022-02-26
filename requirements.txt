@@ -3,7 +3,7 @@ bcrypt>=3.1.6
 cffi>=1.14.4
 colorama==0.4.1
 cryptography>=3.2
-HY-sshapi>=2022.2.26.1514
+HY-sshapi>=2022.2.26.1528
 idna>=2.7
 paramiko>=2.9
 prompt-toolkit>=3.0.6
